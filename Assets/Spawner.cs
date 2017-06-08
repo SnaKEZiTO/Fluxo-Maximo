@@ -8,6 +8,7 @@ public class Spawner : MonoBehaviour {
 
     public GameObject nodoPrefab;
     public Conexao conexaoPrefab;
+    List<Nodo> nodos = new List<Nodo>();
 
     void Start () {
         CriarNodos();
@@ -23,12 +24,15 @@ public class Spawner : MonoBehaviour {
 
         
         for (int i = 0; i < numerosLidos.Count; i = i + 3) {
-            print(numerosLidos[i]);
+            //print(numerosLidos[i]);
+            bool novo;
             GameObject nodo;
             if (GameObject.Find("Nodo " + numerosLidos[i].ToString()) == null) {
                 nodo = Instantiate(nodoPrefab, transform.position, Quaternion.identity, transform);
+                novo = true;
             }else{
                 nodo = GameObject.Find("Nodo " + numerosLidos[i].ToString());
+                novo = false;
             }
 
             Nodo nodoScript = nodo.GetComponent<Nodo>();
@@ -40,10 +44,39 @@ public class Spawner : MonoBehaviour {
             Conexao conexao = Instantiate(conexaoPrefab);
             conexao.transform.SetParent(nodo.transform);
             conexao.origem = numerosLidos[i];
-            conexao.custo = numerosLidos[i + 1];
-            conexao.destino = numerosLidos[i + 2];
+            conexao.destino = numerosLidos[i + 1];
+            conexao.custo = numerosLidos[i + 2];
 
+            nodoScript.conexoes.Add(conexao);
+
+
+            if (novo) {
+                nodos.Add(nodoScript);
+            }
+            
         }
+
+        print("numero de nodos na lista: " + nodos.Count);
+        int numeroDeConexoes = 0;
+        foreach (Nodo nodo in nodos) {
+            foreach (Conexao conexao in nodo.conexoes) {
+                numeroDeConexoes++;
+            }
+        }
+        print(numeroDeConexoes);
+        FlowNetwork flowNetwork = new FlowNetwork(numeroDeConexoes);
+
+        foreach (Nodo nodo in nodos) {
+            foreach (Conexao conexao in nodo.conexoes) {
+                flowNetwork.AddEdge(new FlowEdge(nodo.numero, conexao.destino, conexao.custo));
+
+            }
+        }
+
+        FordFulkerson fordFulkerson = new FordFulkerson(flowNetwork, 1, 99);
+
+        print(fordFulkerson.Value);
+
         
 
     }
@@ -54,13 +87,13 @@ public class Spawner : MonoBehaviour {
         string resultado = "";
 
         try {   // Open the text file using a stream reader.
-            using (StreamReader sr = new StreamReader("C:\\Users\\renan\\Documents\\Fluxo Maximo\\Assets\\arquivo.txt")) {
+            using (StreamReader sr = new StreamReader("C:\\Users\\renan\\Documents\\Unity Projects\\Fluxo Maximo\\Assets\\arquivo.txt")) {
                 // Read the stream to a string, and write the string to the console.
                 resultado = sr.ReadToEnd();
             }
         } catch (Exception e) {
-            print("Erro");
-            print(e.Message);
+            //print("Erro");
+            //print(e.Message);
         }
 
         return resultado;
